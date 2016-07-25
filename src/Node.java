@@ -1,4 +1,5 @@
 
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,11 +17,7 @@ public class Node {
 	private Server server;
 	private Client client;
 
-	public Map<String, Node> getNeighbors() {
-		return neighbors;
-	}
-
-	private Map<String, Node> neighbors = null;
+	private Map<Integer, Node> neighbors = null;
 
 	// Current Instance
 	public Node(int nodeId) {
@@ -79,9 +76,12 @@ public class Node {
 		return clock_value;
 	}
 
-	public void setClock_value(int clock_value) {
-		this.clock_value = clock_value;
+	public synchronized void incrementClock(){
+		++clock_value;
 	}
+//	public void setClock_value(int clock_value) {
+//		this.clock_value = clock_value;
+//	}
 
 	public PriorityBlockingQueue<Message> getNodeQueue() {
 		return messageQueue;
@@ -93,7 +93,7 @@ public class Node {
 
 	public Map<Node, Boolean> getReceivedMap() {
 		if (receivedMap == null) {
-
+			receivedMap = new HashMap<>();
 		}
 		return receivedMap;
 	}
@@ -103,7 +103,10 @@ public class Node {
 	}
 
 	public void emptyReceivedMap() {
-		this.receivedMap.clear();
+		for(Map.Entry<Node, Boolean> rmap  : receivedMap.entrySet())
+		{
+			receivedMap.put(rmap.getKey(),false);
+		}
 	}
 
 	@Override
@@ -111,11 +114,15 @@ public class Node {
 		return _id + " " + name + " " + listeningPort;
 	}
 
-	public void setNeighbors(HashMap<String, Node> host_to_port) {
+	public Map<Integer, Node> getNeighbors() {
+		return neighbors;
+	}
+
+	public void setNeighbors(Map<Integer, Node> host_to_port) {
 		neighbors = host_to_port;
 	}
 
-	public void putMessage(Message message) {
+	public void putMessageInQueue(Message message) {
 		// TODO Auto-generated method stub
 		messageQueue.put(message);
 	}
@@ -124,9 +131,9 @@ public class Node {
 		// Start Server to Receive requests
 		server = new Server(this);
 		new Thread(server).start();
-		try{
+		try {
 			Thread.sleep(2000);
-		}catch(Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		// Start Client to send Requests
@@ -145,6 +152,26 @@ public class Node {
 
 	public Client getClient() {
 		return client;
+	}
+
+	public void putReceived(int nodeId) {
+		receivedMap.put(neighbors.get(nodeId), true);
+	}
+
+	public synchronized void executeCriticalSection() {
+		System.out.println("Critical Section for Node : " + this._id + " executed");
+	}
+
+	public void removeMessageFromQueue(Message message) {
+		for (Message tempMessage : messageQueue) {
+			if (tempMessage.getSenderNodeId() == message.getSenderNodeId()) {
+				messageQueue.remove(tempMessage);
+			}
+		}
+	}
+
+	public void sendReplyToServer(Message message) throws IOException{
+		client.sendReply(message);
 	}
 
 }

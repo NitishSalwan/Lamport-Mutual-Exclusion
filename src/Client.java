@@ -21,9 +21,9 @@ public class Client {
 
 	public synchronized void sendRequest() throws IOException {
 		parent.emptyReceivedMap();
-		parent.setClock_value(parent.getClock_value() + 1);
+		parent.incrementClock();
 		Message message = new Message("request", parent.getId(), parent.getClock_value());
-		parent.putMessage(message);
+		parent.putMessageInQueue(message);
 		System.out.println("Message added in Queue : " + parent.getId() + " at clock " + parent.getClock_value()
 				+ " content: " + message.toString());
 
@@ -41,20 +41,29 @@ public class Client {
 		}
 	}
 
-	
-	
-	
-	public synchronized void sendReply() throws IOException {
-		
-		//aos2.clock_value++;
-		
-		
+	public synchronized void sendReply(Message msgToReplyFor) throws IOException {
+
+		parent.incrementClock();
+		String message = "reply " + parent.getId() + " " + parent.getClock_value();
+
+		Node receiverNode = null;
+		for (Map.Entry<Node, SCTPMessageInfo> entry : socketMap.entrySet()) {
+			if (entry.getKey().getId() == msgToReplyFor.getSenderNodeId()) {
+				receiverNode = entry.getKey();
+			}
+		}
+
+		SctpChannel temp_socket = (SctpChannel) socketMap.get(receiverNode).sctpChannel;
+		ByteBuffer temp_buffer = ByteBuffer.allocate(MyApplication.MESSAGE_SIZE);
+		temp_buffer.put(message.toString().getBytes());
+		temp_buffer.flip();
+		temp_socket.send(temp_buffer, socketMap.get(receiverNode).messageInfo);
 	}
-	
+
 	private void initSocketConnection() {
 		socketMap = getSocketMap();
 		int i = 1;
-		for (Map.Entry<String, Node> neighbors : parent.getNeighbors().entrySet()) {
+		for (Map.Entry<Integer, Node> neighbors : parent.getNeighbors().entrySet()) {
 			Node neighbor = neighbors.getValue();
 			try {
 				SocketAddress socketAddress = new InetSocketAddress(neighbor.getName(), neighbor.getListeningPort());

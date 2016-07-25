@@ -1,6 +1,6 @@
 import java.io.Serializable;
 
-public class Message implements Serializable {
+public class Message{
 	private String content;
 	private int senderNodeId;
 	private int clock_value;

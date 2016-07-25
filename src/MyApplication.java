@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.Map;
 
 public class MyApplication {
 
@@ -17,7 +18,7 @@ public class MyApplication {
 	// HashMap<Integer,Boolean>();
 	// static int clock_value=0;
 
-	HashMap<String, Node> host_to_port = new HashMap<String, Node>();
+	HashMap<Integer, Node> host_to_port = new HashMap<Integer, Node>();
 	// static HashMap<String,Integer> host_to_node = new
 	// HashMap<String,Integer>();
 
@@ -54,7 +55,7 @@ public class MyApplication {
 					System.out.println("Node :" + node.toString());
 
 				} else {
-					host_to_port.put(words[1],
+					host_to_port.put(Integer.parseInt(words[0]),
 							new Node(Integer.parseInt(words[0]), words[1], Integer.parseInt(words[2])));
 							// host_to_node.put(words[1],
 							// Integer.parseInt(words[0]));
@@ -67,6 +68,15 @@ public class MyApplication {
 
 		}
 		node.setNeighbors(host_to_port);
+		HashMap<Node,Boolean> tempMap =new HashMap<Node,Boolean>();
+		for(Map.Entry<Integer, Node> neighbour : node.getNeighbors().entrySet())
+		{
+			tempMap.put(neighbour.getValue(),false);
+		}
+		
+		node.setReceivedMap(tempMap);
+		
+		
 		br.close();
 	}
 

@@ -47,8 +47,7 @@ public class MyApplication {
 			if (!currentline.equals("")) {
 				String[] words = currentline.split("\\s+");
 
-				if (Integer.parseInt(words[0]) == node.getId()) {
-					System.out.println("currentline " + currentline);
+				if (Integer.parseInt(words[0]) == node_id) {
 					node = new Node(node_id);
 					node.setListeningPort(Integer.parseInt(words[2]));
 					node.setName(words[1]);
@@ -71,12 +70,19 @@ public class MyApplication {
 		br.close();
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		MyApplication myApp = new MyApplication(Integer.parseInt(args[0]));
 		myApp.node.startConnections();
-
+		try{
+			Thread.sleep(5000);
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
+		
+		
 		Client client = myApp.node.getClient();
 		client.sendRequest();
 		Server server = myApp.node.getServer();
+		
 	}
 }

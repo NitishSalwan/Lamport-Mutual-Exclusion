@@ -124,7 +124,11 @@ public class Node {
 		// Start Server to Receive requests
 		server = new Server(this);
 		new Thread(server).start();
-
+		try{
+			Thread.sleep(2000);
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
 		// Start Client to send Requests
 		new Thread(new Runnable() {
 			@Override

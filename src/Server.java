@@ -51,15 +51,34 @@ class RequestHandler {
 
 		System.out.println("Initializing Handler for node : " + node.getId() + " at Port : " + node.getListeningPort());
 		System.out.println(
-				"Server at node " + node.getId() + "'s queuq size (before processing) : " + node.getNodeQueue().size());
+				"Server at node " + node.getId() + "'s queue size (before processing) : " + node.getNodeQueue().size());
 		ByteBuffer byteBuffer = ByteBuffer.allocate(MyApplication.MESSAGE_SIZE);
 		MessageInfo messageInfo = null;
 
 		do {
 			messageInfo = sctpChannel.receive(byteBuffer, null, null);
-			String message;
-			message = byteToString(byteBuffer);
-			System.out.println("Message received at node " + node.getId() + " : " + message);
+			Message message = parseMessage(byteToString(byteBuffer));
+			
+			/*
+			 *  first check what is content of message 
+			 *   1. add the NODE (message sender) to node->boolean hashmap  
+ 			 *   2. Check for hashmap if we have got all trues in hashmap of step 2 and peek element belongs to current node then execute critical section. 
+			 *   3) if request -> 
+			 *    a. call send_reply method from client
+			 *    b. add this message to the queue
+			 *   4). if reply 	 ->  nothing  
+			 *   5). if release   ->  element remove from queue
+			 *   
+			 * 
+			 */
+			
+			
+			//TODO: Print accordingly
+			System.out.println("Message received at node " + node.getId() + " : " + message+" & Queue Size :"+ node.getNodeQueue().size());
+			
+			
+			
+
 		} while (messageInfo != null);
 	}
 
@@ -71,4 +90,8 @@ class RequestHandler {
 		return new String(bufArr);
 	}
 
+	private Message parseMessage(String message){
+		String[] message_array=message.split("\\s+");
+		return new Message(message_array[0].trim(), Integer.parseInt(message_array[1].trim()),Integer.parseInt(message_array[2].trim()));
+	}
 }

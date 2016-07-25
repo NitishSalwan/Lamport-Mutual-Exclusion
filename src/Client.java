@@ -24,38 +24,41 @@ public class Client {
 		parent.setClock_value(parent.getClock_value() + 1);
 		Message message = new Message("request", parent.getId(), parent.getClock_value());
 		parent.putMessage(message);
-		System.out.println("Message added in Queue from : " + parent.getId() + " at clock " + parent.getClock_value()
-				+ "\nContent: " + message.toString());
+		System.out.println("Message added in Queue : " + parent.getId() + " at clock " + parent.getClock_value()
+				+ " content: " + message.toString());
+
+		System.out.println("Queue Size at" + parent.getId() + "  : " + parent.getNodeQueue().size());
 
 		for (Map.Entry<Node, SCTPMessageInfo> entry : socketMap.entrySet()) {
 			SctpChannel temp_socket = (SctpChannel) entry.getValue().sctpChannel;
 			ByteBuffer temp_buffer = ByteBuffer.allocate(MyApplication.MESSAGE_SIZE);
-
-			// convert the string message into bytes and put it in the byte
-			// buffer
 			temp_buffer.put(message.toString().getBytes());
-			// Reset a pointer to point to the start of buffer
 			temp_buffer.flip();
-			// Send a message in the channel (byte format)
 			temp_socket.send(temp_buffer, entry.getValue().messageInfo);
 
 			System.out.println("Message sent from : " + parent.getId() + " to " + entry.getKey().getId() + " at clock "
-					+ parent.getClock_value() + "\nContent: " + message.toString());
-
-			System.out.println("Client queue Size " + parent.getId() + "  : " + parent.getNodeQueue().size());
+					+ parent.getClock_value() + " content: " + message.toString());
 		}
-
 	}
 
+	
+	
+	
+	public synchronized void sendReply() throws IOException {
+		
+		//aos2.clock_value++;
+		
+		
+	}
+	
 	private void initSocketConnection() {
 		socketMap = getSocketMap();
+		int i = 1;
 		for (Map.Entry<String, Node> neighbors : parent.getNeighbors().entrySet()) {
 			Node neighbor = neighbors.getValue();
-
-			int i = 1;
 			try {
 				SocketAddress socketAddress = new InetSocketAddress(neighbor.getName(), neighbor.getListeningPort());
-				SctpChannel sctpChannel = SctpChannel.open(socketAddress, 1, 1);
+				SctpChannel sctpChannel = SctpChannel.open(socketAddress, 5, 5);
 				MessageInfo messageInfo = MessageInfo.createOutgoing(socketAddress, i++);
 				socketMap.put(neighbor, new SCTPMessageInfo(messageInfo, sctpChannel));
 			} catch (UnknownHostException e) {

@@ -83,15 +83,17 @@ public class MyApplication {
 	public static void main(String[] args) throws Exception {
 		MyApplication myApp = new MyApplication(Integer.parseInt(args[0]));
 		myApp.node.startConnections();
+		
 		try{
 			Thread.sleep(5000);
 		}catch(Exception ex){
 			ex.printStackTrace();
 		}
 		
-		
 		Client client = myApp.node.getClient();
+//		client.initSocketConnection();
 		client.sendRequest();
+		
 		Server server = myApp.node.getServer();
 		
 	}

@@ -12,7 +12,7 @@ public class Node {
 	private int clock_value = -1;
 
 	private PriorityBlockingQueue<Message> messageQueue = null;
-	private Map<Node, Boolean> receivedMap = null;
+	private Map<Node, Boolean> messageReceivedMap = null;
 
 	private Server server;
 	private Client client;
@@ -24,7 +24,7 @@ public class Node {
 		_id = nodeId;
 		clock_value = 0;
 		neighbors = new HashMap<>();
-		receivedMap = new HashMap<>();
+		messageReceivedMap = new HashMap<>();
 		messageQueue = new PriorityBlockingQueue<>(10, new Comparator<Message>() {
 			@Override
 			public int compare(Message m1, Message m2) {
@@ -76,14 +76,14 @@ public class Node {
 		return clock_value;
 	}
 
-	public synchronized void incrementClock(){
+	public synchronized void incrementClock() {
 		++clock_value;
 	}
-//	public void setClock_value(int clock_value) {
-//		this.clock_value = clock_value;
-//	}
+	// public void setClock_value(int clock_value) {
+	// this.clock_value = clock_value;
+	// }
 
-	public PriorityBlockingQueue<Message> getNodeQueue() {
+	public PriorityBlockingQueue<Message> getMessageReceivedQueue() {
 		return messageQueue;
 	}
 
@@ -92,20 +92,19 @@ public class Node {
 	}
 
 	public Map<Node, Boolean> getReceivedMap() {
-		if (receivedMap == null) {
-			receivedMap = new HashMap<>();
+		if (messageReceivedMap == null) {
+			messageReceivedMap = new HashMap<>();
 		}
-		return receivedMap;
+		return messageReceivedMap;
 	}
 
 	public void setReceivedMap(Map<Node, Boolean> receivedMap) {
-		this.receivedMap = receivedMap;
+		this.messageReceivedMap = receivedMap;
 	}
 
-	public void emptyReceivedMap() {
-		for(Map.Entry<Node, Boolean> rmap  : receivedMap.entrySet())
-		{
-			receivedMap.put(rmap.getKey(),false);
+	public synchronized void emptyReceivedMap() {
+		for (Map.Entry<Integer, Node> rmap : neighbors.entrySet()) {
+			messageReceivedMap.put(rmap.getValue(), false);
 		}
 	}
 
@@ -131,11 +130,13 @@ public class Node {
 		// Start Server to Receive requests
 		server = new Server(this);
 		new Thread(server).start();
-		try {
+		
+		try{
 			Thread.sleep(2000);
-		} catch (Exception ex) {
+		}catch(Exception ex){
 			ex.printStackTrace();
 		}
+
 		// Start Client to send Requests
 		new Thread(new Runnable() {
 			@Override
@@ -155,11 +156,44 @@ public class Node {
 	}
 
 	public void putReceived(int nodeId) {
-		receivedMap.put(neighbors.get(nodeId), true);
+		messageReceivedMap.put(neighbors.get(nodeId), true);
+		System.out.println("Received HashMap value in node :" + this._id);
+		for (Map.Entry<Node, Boolean> rMap : messageReceivedMap.entrySet()) {
+			System.out.println(rMap.getKey() + " " + rMap.getValue());
+		}
 	}
 
 	public synchronized void executeCriticalSection() {
 		System.out.println("Critical Section for Node : " + this._id + " executed");
+		PriorityBlockingQueue<Message> queue = new PriorityBlockingQueue<>(10, new Comparator<Message>() {
+			@Override
+			public int compare(Message m1, Message m2) {
+				if ((m1.getTime() != m2.getTime())) {
+					if (m1.getTime() > m2.getTime()) {
+						return 1;
+					} else {
+						return -1;
+					}
+				} else {
+
+					if (m1.getSenderNodeId() > m2.getSenderNodeId()) {
+						return 1;
+					} else {
+						return -1;
+					}
+				}
+			}
+		});
+
+		System.out.println("Message in queue are in order");
+		while (!messageQueue.isEmpty()) {
+			Message message = messageQueue.poll();
+			System.out.println(message.toString());
+			queue.put(message);
+		}
+		
+		messageQueue = queue;
+
 	}
 
 	public void removeMessageFromQueue(Message message) {
@@ -170,8 +204,15 @@ public class Node {
 		}
 	}
 
-	public void sendReplyToServer(Message message) throws IOException{
+	public void sendReplyToServer(Message message) throws IOException {
+		System.out.println(" ");
 		client.sendReply(message);
+	}
+
+	public void sendRelease() throws IOException {
+		// TODO Auto-generated method stub
+		client.sendRelease();
+
 	}
 
 }

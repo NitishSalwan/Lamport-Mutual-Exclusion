@@ -11,23 +11,24 @@ import com.sun.nio.sctp.MessageInfo;
 import com.sun.nio.sctp.SctpChannel;
 
 public class Client {
-	private Node parent;
+	private Node parentNode;
 	private Map<Node, SCTPMessageInfo> socketMap = null;
-
+	
+	
 	public Client(Node parent) {
-		this.parent = parent;
+		this.parentNode = parent;
 		initSocketConnection();
 	}
 
 	public synchronized void sendRequest() throws IOException {
-		parent.emptyReceivedMap();
-		parent.incrementClock();
-		Message message = new Message("request", parent.getId(), parent.getClock_value());
-		parent.putMessageInQueue(message);
-		System.out.println("Message added in Queue : " + parent.getId() + " at clock " + parent.getClock_value()
+		parentNode.emptyReceivedMap();
+		parentNode.incrementClock();
+		Message message = new Message("request", parentNode.getId(), parentNode.getClock_value());
+		parentNode.putMessageInQueue(message);
+		System.out.println("Message added in Queue : " + parentNode.getId() + " at clock " + parentNode.getClock_value()
 				+ " content: " + message.toString());
 
-		System.out.println("Queue Size at" + parent.getId() + "  : " + parent.getNodeQueue().size());
+		System.out.println("Queue Size at" + parentNode.getId() + "  : " + parentNode.getMessageReceivedQueue().size());
 
 		for (Map.Entry<Node, SCTPMessageInfo> entry : socketMap.entrySet()) {
 			SctpChannel temp_socket = (SctpChannel) entry.getValue().sctpChannel;
@@ -36,15 +37,15 @@ public class Client {
 			temp_buffer.flip();
 			temp_socket.send(temp_buffer, entry.getValue().messageInfo);
 
-			System.out.println("Message sent from : " + parent.getId() + " to " + entry.getKey().getId() + " at clock "
-					+ parent.getClock_value() + " content: " + message.toString());
+			System.out.println("Message sent from : " + parentNode.getId() + " to " + entry.getKey().getId() + " at clock "
+					+ parentNode.getClock_value() + " content: " + message.toString());
 		}
 	}
 
 	public synchronized void sendReply(Message msgToReplyFor) throws IOException {
 
-		parent.incrementClock();
-		String message = "reply " + parent.getId() + " " + parent.getClock_value();
+		parentNode.incrementClock();
+		String message = "reply " + parentNode.getId() + " " + parentNode.getClock_value();
 
 		Node receiverNode = null;
 		for (Map.Entry<Node, SCTPMessageInfo> entry : socketMap.entrySet()) {
@@ -60,10 +61,32 @@ public class Client {
 		temp_socket.send(temp_buffer, socketMap.get(receiverNode).messageInfo);
 	}
 
-	private void initSocketConnection() {
+	public synchronized void sendRelease() throws IOException {
+		parentNode.emptyReceivedMap();
+		parentNode.incrementClock();
+		Message message = new Message("release", parentNode.getId(), parentNode.getClock_value());
+		
+		System.out.println("Release Message sent by : " + parentNode.getId() + " at clock " + parentNode.getClock_value()
+				+ " content: " + message.toString());
+
+		for (Map.Entry<Node, SCTPMessageInfo> entry : socketMap.entrySet()) {
+			SctpChannel temp_socket = (SctpChannel) entry.getValue().sctpChannel;
+			ByteBuffer temp_buffer = ByteBuffer.allocate(MyApplication.MESSAGE_SIZE);
+			temp_buffer.put(message.toString().getBytes());
+			temp_buffer.flip();
+			temp_socket.send(temp_buffer, entry.getValue().messageInfo);
+
+			System.out.println("Message sent from : " + parentNode.getId() + " to " + entry.getKey().getId() + " at clock "
+					+ parentNode.getClock_value() + " content: " + message.toString());
+		}
+	}
+	
+	
+	
+	public void initSocketConnection() {
 		socketMap = getSocketMap();
 		int i = 1;
-		for (Map.Entry<Integer, Node> neighbors : parent.getNeighbors().entrySet()) {
+		for (Map.Entry<Integer, Node> neighbors : parentNode.getNeighbors().entrySet()) {
 			Node neighbor = neighbors.getValue();
 			try {
 				SocketAddress socketAddress = new InetSocketAddress(neighbor.getName(), neighbor.getListeningPort());

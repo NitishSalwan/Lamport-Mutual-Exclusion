@@ -1,6 +1,5 @@
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +18,8 @@ public class Node {
 	private Client client;
 
 	private Map<Integer, Node> neighbors = null;
+
+	private static final Object mObject = new Object();
 
 	Comparator<Message> comparator = new Comparator<Message>() {
 		@Override
@@ -105,9 +106,11 @@ public class Node {
 		this.messageReceivedMap = receivedMap;
 	}
 
-	public synchronized void emptyReceivedMap() {
-		for (Map.Entry<Integer, Node> rmap : neighbors.entrySet()) {
-			messageReceivedMap.put(rmap.getValue(), false);
+	public void emptyReceivedMap() {
+		synchronized (mObject) {
+			for (Map.Entry<Integer, Node> rmap : neighbors.entrySet()) {
+				messageReceivedMap.put(rmap.getValue(), false);
+			}
 		}
 	}
 
@@ -125,12 +128,12 @@ public class Node {
 	}
 
 	public void putMessageInQueue(Message message) {
-		// TODO Auto-generated method stub
-		messageQueue.put(message);
+		synchronized (mObject) {
+			messageQueue.put(message);
+		}
 	}
 
 	public synchronized void startConnections() {
-		// Start Server to Receive requests
 		server = new Server(this);
 		new Thread(server).start();
 
@@ -159,14 +162,17 @@ public class Node {
 	}
 
 	public void putReceived(int nodeId) {
-		messageReceivedMap.put(neighbors.get(nodeId), true);
-		Logger.println("Received HashMap value in node :" + this._id);
-		for (Map.Entry<Node, Boolean> rMap : messageReceivedMap.entrySet()) {
-			Logger.println(rMap.getKey() + " " + rMap.getValue());
+		synchronized (mObject) {
+			messageReceivedMap.put(neighbors.get(nodeId), true);
+			Logger.println("Received HashMap value in node :" + this._id);
+			for (Map.Entry<Node, Boolean> rMap : messageReceivedMap.entrySet()) {
+				Logger.println(rMap.getKey() + " " + rMap.getValue());
+			}
 		}
 	}
 
-	public synchronized void executeCriticalSection() {
+	public void executeCriticalSection() {
+
 		Logger.println("Critical Section for Node : " + this._id + " executed");
 		PriorityBlockingQueue<Message> queue = new PriorityBlockingQueue<>(10, comparator);
 
@@ -181,30 +187,44 @@ public class Node {
 	}
 
 	public void removeMessageFromQueue(Message messageToRemove) {
-		for (Message tempMessage : messageQueue) {
-			if (tempMessage.getSenderNodeId() == messageToRemove.getSenderNodeId()) {
-				messageQueue.remove(tempMessage);
+		synchronized (mObject) {
+			for (Message tempMessage : messageQueue) {
+				if (tempMessage.getSenderNodeId() == messageToRemove.getSenderNodeId()) {
+					messageQueue.remove(tempMessage);
+				}
 			}
 		}
-		PriorityBlockingQueue<Message> queue = new PriorityBlockingQueue<>(10, comparator);
-
-		Logger.println("Message in queue are in order");
-		while (!messageQueue.isEmpty()) {
-			Message message = messageQueue.poll();
-			Logger.println(message.toString());
-			queue.put(message);
-		}
-		messageQueue = queue;
-		
 	}
 
 	public void sendReplyToServer(Message message) throws IOException {
-		client.sendReply(message);
+		synchronized (mObject) {
+			client.sendReply(message);
+		}
 	}
 
 	public void sendRelease() throws IOException {
-		// TODO Auto-generated method stub
 		client.sendRelease();
+	}
+
+	public void callCriticalSection(boolean canExecute) throws IOException {
+		synchronized (mObject) {
+			Logger.println("In critical section fucntion call");
+			// Critical Section Execution
+			if (!messageQueue.isEmpty()) {
+				if (canExecute && messageQueue.peek().getSenderNodeId() == this.getId()) {
+					// Execute critical section
+					executeCriticalSection();
+
+					// remove the request from queue
+					messageQueue.poll();
+
+					// release message
+					sendRelease();
+				} else {
+					Logger.println("Critical Section Not executed");
+				}
+			}
+		}
 
 	}
 

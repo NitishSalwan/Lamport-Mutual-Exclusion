@@ -1,5 +1,3 @@
-import java.io.Serializable;
-
 public class Message{
 	private String content;
 	private int senderNodeId;

@@ -50,6 +50,7 @@ public class MyApplication {
 
 				if (Integer.parseInt(words[0]) == node_id) {
 					node = new Node(node_id);
+					Logger.setParentNode(node);
 					node.setListeningPort(Integer.parseInt(words[2]));
 					node.setName(words[1]);
 					System.out.println("Node :" + node.toString());

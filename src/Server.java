@@ -29,7 +29,7 @@ public class Server implements Runnable {
 			sctpServerChannel.bind(serverAddr);
 			// Server goes into a permanent loop accepting connections from
 			// client
-			System.out.println("Server up for Node :" + parentNode.toString());
+			Logger.println("Server up for Node :" + parentNode.toString());
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -37,7 +37,7 @@ public class Server implements Runnable {
 		while (true) {
 			try {
 				sctpChannel = sctpServerChannel.accept();
-				System.out.println("Request accepted at Node : " + parentNode.toString());
+				Logger.println("Request accepted at Node : " + parentNode.toString());
 				new RequestHandler(sctpChannel, parentNode);
 			} catch (Exception ex) {
 				ex.printStackTrace();
@@ -54,29 +54,31 @@ class RequestHandler {
 		this.sctpChannel = socket;
 		this.parentNode = node;
 
-		System.out.println("Initializing Handler for node : " + node.getId() + " at Port : " + node.getListeningPort());
-		System.out.println("Server at node " + node.getId() + "'s queue size (before processing) : "
+		Logger.println("Initializing Handler for node : " + node.getId() + " at Port : " + node.getListeningPort());
+		Logger.println("Server at node " + node.getId() + "'s queue size (before processing) : "
 				+ node.getMessageReceivedQueue().size());
 		ByteBuffer byteBuffer = ByteBuffer.allocate(MyApplication.MESSAGE_SIZE);
 		MessageInfo messageInfo = null;
 
-		 do {
+//		 do {
 		// do
 		// {
 
+		
+		
 		messageInfo = sctpChannel.receive(byteBuffer, null, null);
 		// }while(messageInfo==null);
-		if(messageInfo == null){
-		 System.out.println("MessageInfo Null,Skipping rest of the server code at : Node " + parentNode.getId());
-		 continue;
-		 }
+//		if(messageInfo == null){
+//		 Logger.println("MessageInfo Null,Skipping rest of the server code at : Node " + parentNode.getId());
+//		 continue;
+//		 }
 
 		parentNode.incrementClock();
 		
 		Message message = parseMessage(byteToString(byteBuffer));
 
 		// TODO: Print accordingly
-		System.out.println("Message received at node " + node.getId() + " : " + message + " & Queue Size :"
+		Logger.println("Message received at node " + node.getId() + " : " + message + " & Queue Size :"
 				+ node.getMessageReceivedQueue().size()); 
 
 		
@@ -112,20 +114,20 @@ class RequestHandler {
 		processMessage(message, flag);
 		// Step 3 - 6
 
-		} while (messageInfo != null);
+//		} while (messageInfo != null);
 	}
 
 	private void processMessage(Message message, boolean canExecuteCritialSection) throws IOException {
 		if (message.getContent().trim().equals("request")) {
-			System.out.println("Message received as request, Execution will begin at " + parentNode.getId());
+			Logger.println("Message received as request, Execution will begin at " + parentNode.getId());
 			parentNode.putMessageInQueue(message);
 			criticalSectionCall(canExecuteCritialSection);
 			parentNode.sendReplyToServer(message);
 		} else if (message.getContent().trim().equals("reply")) {
-			System.out.println("Message received as reply, No execution at " + parentNode.getId());
+			Logger.println("Message received as reply, No execution at " + parentNode.getId());
 			criticalSectionCall(canExecuteCritialSection);
 		} else if (message.getContent().trim().equals("release")) {
-			System.out.println("Message received as release, Execution will begin at " + parentNode.getId());
+			Logger.println("Message received as release, Execution will begin at " + parentNode.getId());
 			parentNode.removeMessageFromQueue(message);
 			criticalSectionCall(canExecuteCritialSection);
 		} else {
@@ -133,7 +135,17 @@ class RequestHandler {
 		}
 	}
 
+	/**
+	 * dgsdgds
+	 * @param canExecute hhdabdd
+	 * @throws IOException Critica 
+	 */
+	/*
+	 * asdasjss
+	 * 
+	 */
 	public void criticalSectionCall(boolean canExecute) throws IOException {
+		Logger.println("In critical section fucntion call");
 		// Critical Section Execution
 		if (!parentNode.getMessageReceivedQueue().isEmpty()) {
 			if (canExecute && parentNode.getMessageReceivedQueue().peek().getSenderNodeId() == parentNode.getId()) {
@@ -145,6 +157,8 @@ class RequestHandler {
 
 				// release message
 				parentNode.sendRelease();
+			}else{
+				Logger.println("Critical Section Not executed");
 			}
 		}
 

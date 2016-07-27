@@ -1,5 +1,6 @@
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,31 +20,33 @@ public class Node {
 
 	private Map<Integer, Node> neighbors = null;
 
+	Comparator<Message> comparator = new Comparator<Message>() {
+		@Override
+		public int compare(Message m1, Message m2) {
+			if ((m1.getTime() != m2.getTime())) {
+				if (m1.getTime() > m2.getTime()) {
+					return 1;
+				} else {
+					return -1;
+				}
+			} else {
+
+				if (m1.getSenderNodeId() > m2.getSenderNodeId()) {
+					return 1;
+				} else {
+					return -1;
+				}
+			}
+		}
+	};
+
 	// Current Instance
 	public Node(int nodeId) {
 		_id = nodeId;
 		clock_value = 0;
 		neighbors = new HashMap<>();
 		messageReceivedMap = new HashMap<>();
-		messageQueue = new PriorityBlockingQueue<>(10, new Comparator<Message>() {
-			@Override
-			public int compare(Message m1, Message m2) {
-				if ((m1.getTime() != m2.getTime())) {
-					if (m1.getTime() > m2.getTime()) {
-						return 1;
-					} else {
-						return -1;
-					}
-				} else {
-
-					if (m1.getSenderNodeId() > m2.getSenderNodeId()) {
-						return 1;
-					} else {
-						return -1;
-					}
-				}
-			}
-		});
+		messageQueue = new PriorityBlockingQueue<>(10, comparator);
 	}
 
 	public Node(int nodeId, String name, int listenPort) {
@@ -130,10 +133,10 @@ public class Node {
 		// Start Server to Receive requests
 		server = new Server(this);
 		new Thread(server).start();
-		
-		try{
+
+		try {
 			Thread.sleep(2000);
-		}catch(Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
@@ -157,55 +160,45 @@ public class Node {
 
 	public void putReceived(int nodeId) {
 		messageReceivedMap.put(neighbors.get(nodeId), true);
-		System.out.println("Received HashMap value in node :" + this._id);
+		Logger.println("Received HashMap value in node :" + this._id);
 		for (Map.Entry<Node, Boolean> rMap : messageReceivedMap.entrySet()) {
-			System.out.println(rMap.getKey() + " " + rMap.getValue());
+			Logger.println(rMap.getKey() + " " + rMap.getValue());
 		}
 	}
 
 	public synchronized void executeCriticalSection() {
-		System.out.println("Critical Section for Node : " + this._id + " executed");
-		PriorityBlockingQueue<Message> queue = new PriorityBlockingQueue<>(10, new Comparator<Message>() {
-			@Override
-			public int compare(Message m1, Message m2) {
-				if ((m1.getTime() != m2.getTime())) {
-					if (m1.getTime() > m2.getTime()) {
-						return 1;
-					} else {
-						return -1;
-					}
-				} else {
+		Logger.println("Critical Section for Node : " + this._id + " executed");
+		PriorityBlockingQueue<Message> queue = new PriorityBlockingQueue<>(10, comparator);
 
-					if (m1.getSenderNodeId() > m2.getSenderNodeId()) {
-						return 1;
-					} else {
-						return -1;
-					}
-				}
-			}
-		});
-
-		System.out.println("Message in queue are in order");
+		Logger.println("Message in queue are in order");
 		while (!messageQueue.isEmpty()) {
 			Message message = messageQueue.poll();
-			System.out.println(message.toString());
+			Logger.println(message.toString());
 			queue.put(message);
 		}
-		
 		messageQueue = queue;
 
 	}
 
-	public void removeMessageFromQueue(Message message) {
+	public void removeMessageFromQueue(Message messageToRemove) {
 		for (Message tempMessage : messageQueue) {
-			if (tempMessage.getSenderNodeId() == message.getSenderNodeId()) {
+			if (tempMessage.getSenderNodeId() == messageToRemove.getSenderNodeId()) {
 				messageQueue.remove(tempMessage);
 			}
 		}
+		PriorityBlockingQueue<Message> queue = new PriorityBlockingQueue<>(10, comparator);
+
+		Logger.println("Message in queue are in order");
+		while (!messageQueue.isEmpty()) {
+			Message message = messageQueue.poll();
+			Logger.println(message.toString());
+			queue.put(message);
+		}
+		messageQueue = queue;
+		
 	}
 
 	public void sendReplyToServer(Message message) throws IOException {
-		System.out.println(" ");
 		client.sendReply(message);
 	}
 

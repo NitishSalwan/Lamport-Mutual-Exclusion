@@ -25,10 +25,10 @@ public class Client {
 		parentNode.incrementClock();
 		Message message = new Message("request", parentNode.getId(), parentNode.getClock_value());
 		parentNode.putMessageInQueue(message);
-		System.out.println("Message added in Queue : " + parentNode.getId() + " at clock " + parentNode.getClock_value()
+		Logger.println("Message added in Queue : " + parentNode.getId() + " at clock " + parentNode.getClock_value()
 				+ " content: " + message.toString());
 
-		System.out.println("Queue Size at" + parentNode.getId() + "  : " + parentNode.getMessageReceivedQueue().size());
+		Logger.println("Queue Size at" + parentNode.getId() + "  : " + parentNode.getMessageReceivedQueue().size());
 
 		for (Map.Entry<Node, SCTPMessageInfo> entry : socketMap.entrySet()) {
 			SctpChannel temp_socket = (SctpChannel) entry.getValue().sctpChannel;
@@ -37,13 +37,12 @@ public class Client {
 			temp_buffer.flip();
 			temp_socket.send(temp_buffer, entry.getValue().messageInfo);
 
-			System.out.println("Message sent from : " + parentNode.getId() + " to " + entry.getKey().getId() + " at clock "
+			Logger.println("Message sent from : " + parentNode.getId() + " to " + entry.getKey().getId() + " at clock "
 					+ parentNode.getClock_value() + " content: " + message.toString());
 		}
 	}
 
-	public synchronized void sendReply(Message msgToReplyFor) throws IOException {
-
+	public void sendReply(Message msgToReplyFor) throws IOException {
 		parentNode.incrementClock();
 		String message = "reply " + parentNode.getId() + " " + parentNode.getClock_value();
 
@@ -59,6 +58,8 @@ public class Client {
 		temp_buffer.put(message.toString().getBytes());
 		temp_buffer.flip();
 		temp_socket.send(temp_buffer, socketMap.get(receiverNode).messageInfo);
+		Logger.println("Message sent from : " + parentNode.getId() + " to " + msgToReplyFor.getSenderNodeId() + " at clock "
+				+ parentNode.getClock_value() + " content: " + message.toString());
 	}
 
 	public synchronized void sendRelease() throws IOException {
@@ -66,7 +67,7 @@ public class Client {
 		parentNode.incrementClock();
 		Message message = new Message("release", parentNode.getId(), parentNode.getClock_value());
 		
-		System.out.println("Release Message sent by : " + parentNode.getId() + " at clock " + parentNode.getClock_value()
+		Logger.println("Release Message sent by : " + parentNode.getId() + " at clock " + parentNode.getClock_value()
 				+ " content: " + message.toString());
 
 		for (Map.Entry<Node, SCTPMessageInfo> entry : socketMap.entrySet()) {
@@ -76,7 +77,7 @@ public class Client {
 			temp_buffer.flip();
 			temp_socket.send(temp_buffer, entry.getValue().messageInfo);
 
-			System.out.println("Message sent from : " + parentNode.getId() + " to " + entry.getKey().getId() + " at clock "
+			Logger.println("Message sent from : " + parentNode.getId() + " to " + entry.getKey().getId() + " at clock "
 					+ parentNode.getClock_value() + " content: " + message.toString());
 		}
 	}

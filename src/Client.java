@@ -16,6 +16,7 @@ public class Client {
 	}
 
 	public synchronized void sendRequest() throws IOException {
+		parentNode.setTimeStampNow();
 		parentNode.emptyReceivedMap();
 		parentNode.incrementClock();
 		Message message = new Message("request", parentNode.getId(), parentNode.getClock_value());
@@ -23,7 +24,7 @@ public class Client {
 		Logger.println("Message added in Queue : " + parentNode.getId() + " at clock " + parentNode.getClock_value()
 				+ " content: " + message.toString());
 
-		Logger.println("Queue Size at" + parentNode.getId() + "  : " + parentNode.getMessageReceivedQueue().size());
+		Logger.println("Queue Size at" + parentNode.getId() + "  : " + parentNode.getQueueSize());
 
 		for (Map.Entry<Node, SocketMap> entry : socketMap.entrySet()) {
 			PrintWriter writer = entry.getValue().writer;

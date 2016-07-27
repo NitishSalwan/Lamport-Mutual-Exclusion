@@ -43,7 +43,7 @@ class RequestHandler implements Runnable {
 	private Node node;
 	private Socket socket;
 	private BufferedReader reader;
-	
+
 	public RequestHandler(Socket socket, Node node) throws Exception {
 		this.node = node;
 		this.socket = socket;
@@ -70,8 +70,7 @@ class RequestHandler implements Runnable {
 	}
 
 	public void run() {
-		Logger.println("Server at node " + node.getId() + "'s queue size (before processing) : "
-				+ node.getMessageReceivedQueue().size());
+		Logger.println("Server at node " + node.getId() + "'s queue size (before processing) : " + node.getQueueSize());
 
 		String messageStr = null;
 		try {
@@ -79,25 +78,18 @@ class RequestHandler implements Runnable {
 				node.incrementClock();
 				Message message = parseMessage(messageStr);
 				Logger.println("Message received at node " + node.getId() + " : " + message.toString()
-						+ " & Queue Size :" + node.getMessageReceivedQueue().size());
+						+ " & Queue Size :" + node.getQueueSize());
 
 				// Step 1 - Put the node in
-				node.putReceived(message.getSenderNodeId());
+				boolean flag = node.putReceivedAndCheckAll(message.getSenderNodeId());
 
 				// Step 2
-				boolean flag = true;
-				for (Map.Entry<Node, Boolean> map : node.getReceivedMap().entrySet()) {
-					if (!map.getValue()) {
-						flag = false;
-						break;
-					}
-				}
 				processMessage(message, flag);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		
+
 	}
 
 	private void processMessage(Message message, boolean canExecuteCritialSection) throws IOException {

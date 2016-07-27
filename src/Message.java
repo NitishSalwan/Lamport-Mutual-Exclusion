@@ -1,4 +1,4 @@
-public class Message{
+public class Message {
 	private String content;
 	private int senderNodeId;
 	private int clock_value;

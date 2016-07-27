@@ -11,7 +11,7 @@ public class MyApplication {
 
 	private final int TOTAL_NODES;
 	public static final int MESSAGE_SIZE = 1 * 100 * 1024; // 100KB
-
+	
 	// static HashMap<Integer,HashMap<Integer,Boolean>> cs_request_outer= new
 	// HashMap<Integer,HashMap<Integer,Boolean>>();
 	// static HashMap<Integer,Boolean> cs_request_inner = new
@@ -76,8 +76,6 @@ public class MyApplication {
 		}
 		
 		node.setReceivedMap(tempMap);
-		
-		
 		br.close();
 	}
 
@@ -94,6 +92,13 @@ public class MyApplication {
 		Client client = myApp.node.getClient();
 //		client.initSocketConnection();
 		client.sendRequest();
+		
+		Thread.sleep(10000);
+		myApp.node.emptyForNewRequest();
+		client.sendRequest();
+		
+		
+		
 		
 		Server server = myApp.node.getServer();
 		

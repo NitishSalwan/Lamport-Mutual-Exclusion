@@ -5,11 +5,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.PriorityBlockingQueue;
 
+
+
 public class Node {
 	private int _id;
 	private String name;
 	private int listeningPort;
 	private int clock_value = -1;
+	private String csRequesTime;
 
 	private PriorityBlockingQueue<Message> messageQueue = null;
 	private Map<Node, Boolean> messageReceivedMap = null;
@@ -21,6 +24,7 @@ public class Node {
 
 	private static final Object mObject = new Object();
 
+	// Message Comparator
 	Comparator<Message> comparator = new Comparator<Message>() {
 		@Override
 		public int compare(Message m1, Message m2) {
@@ -80,27 +84,21 @@ public class Node {
 		return clock_value;
 	}
 
-	public synchronized void incrementClock() {
-		++clock_value;
-	}
-	// public void setClock_value(int clock_value) {
-	// this.clock_value = clock_value;
-	// }
-
-	public PriorityBlockingQueue<Message> getMessageReceivedQueue() {
-		return messageQueue;
-	}
-
-	public void setNodeQueue(PriorityBlockingQueue<Message> nodeQueue) {
-		this.messageQueue = nodeQueue;
-	}
-
-	public Map<Node, Boolean> getReceivedMap() {
-		if (messageReceivedMap == null) {
-			messageReceivedMap = new HashMap<>();
+	public void incrementClock() {
+		synchronized (mObject) {
+			++clock_value;
 		}
-		return messageReceivedMap;
 	}
+
+	public int getQueueSize() {
+		return messageQueue.size();
+	}
+
+	/*
+	 * public Map<Node, Boolean> getReceivedMap() { if (messageReceivedMap ==
+	 * null) { messageReceivedMap = new HashMap<>(); } return
+	 * messageReceivedMap; }
+	 */
 
 	public void setReceivedMap(Map<Node, Boolean> receivedMap) {
 		this.messageReceivedMap = receivedMap;
@@ -161,7 +159,7 @@ public class Node {
 		return client;
 	}
 
-	public void putReceived(int nodeId) {
+	public boolean putReceivedAndCheckAll(int nodeId) {
 		synchronized (mObject) {
 			messageReceivedMap.put(neighbors.get(nodeId), true);
 			Logger.println("Received HashMap value in node :" + this._id);
@@ -169,13 +167,20 @@ public class Node {
 				Logger.println(rMap.getKey() + " " + rMap.getValue());
 			}
 		}
+		boolean flag = true;
+		for (Map.Entry<Node, Boolean> map : messageReceivedMap.entrySet()) {
+			if (!map.getValue()) {
+				flag = false;
+				break;
+			}
+		}
+		return flag;
 	}
 
 	public void executeCriticalSection() {
-
 		Logger.println("Critical Section for Node : " + this._id + " executed");
+		// For Printing Only : In-Order
 		PriorityBlockingQueue<Message> queue = new PriorityBlockingQueue<>(10, comparator);
-
 		Logger.println("Message in queue are in order");
 		while (!messageQueue.isEmpty()) {
 			Message message = messageQueue.poll();
@@ -212,8 +217,12 @@ public class Node {
 			// Critical Section Execution
 			if (!messageQueue.isEmpty()) {
 				if (canExecute && messageQueue.peek().getSenderNodeId() == this.getId()) {
+					Logger.println("Critical Section execution started at : " + System.currentTimeMillis());
+					Logger.csLog("Critical Section execution started at : " + System.currentTimeMillis());
 					// Execute critical section
 					executeCriticalSection();
+					Logger.csLog("Critical Section execution finished at : " + System.currentTimeMillis());
+					Logger.println("Critical Section execution finished at : " + System.currentTimeMillis());
 
 					// remove the request from queue
 					messageQueue.poll();
@@ -228,4 +237,18 @@ public class Node {
 
 	}
 
+	public void setTimeStampNow() {
+		// TODO Auto-generated method stub
+		csRequesTime = Long.toString(System.currentTimeMillis());
+	}
+
+	public String getTimeStampNow() {
+		// TODO Auto-generated method stub
+		return csRequesTime;
+	}
+
+	public void emptyForNewRequest(){
+		messageQueue.clear();
+		emptyReceivedMap();
+	}
 }

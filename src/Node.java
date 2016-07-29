@@ -217,12 +217,12 @@ public class Node {
 			// Critical Section Execution
 			if (!messageQueue.isEmpty()) {
 				if (canExecute && messageQueue.peek().getSenderNodeId() == this.getId()) {
-					Logger.println("Critical Section execution started at : " + System.currentTimeMillis());
-					Logger.csLog("Critical Section execution started at : " + System.currentTimeMillis());
+					Logger.println("Critical Section execution started at :: " + System.currentTimeMillis());
+					Logger.csLog("Critical Section execution started at :: " + System.currentTimeMillis());
 					// Execute critical section
 					executeCriticalSection();
-					Logger.csLog("Critical Section execution finished at : " + System.currentTimeMillis());
-					Logger.println("Critical Section execution finished at : " + System.currentTimeMillis());
+					Logger.csLog("Critical Section execution finished at :: " + System.currentTimeMillis());
+					Logger.println("Critical Section execution finished at :: " + System.currentTimeMillis());
 
 					// remove the request from queue
 					messageQueue.poll();

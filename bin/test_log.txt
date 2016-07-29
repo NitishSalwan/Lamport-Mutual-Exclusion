@@ -1,0 +1,8 @@
+0 :: 1469592887403 :: Critical Section execution started at : 1469592887435
+0 :: 1469592887403 :: Critical Section execution finished at : 1469592887443
+1 :: 1469592887444 :: Critical Section execution started at : 1469592887461
+1 :: 1469592887444 :: Critical Section execution finished at : 1469592887469
+0 :: 1469592897412 :: Critical Section execution started at : 1469592897443
+0 :: 1469592897412 :: Critical Section execution finished at : 1469592897453
+1 :: 1469592897449 :: Critical Section execution started at : 1469592897473
+1 :: 1469592897449 :: Critical Section execution finished at : 1469592897482

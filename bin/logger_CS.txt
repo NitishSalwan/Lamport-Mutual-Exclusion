@@ -1,0 +1,93 @@
+0 :: 1469592887403 :: Critical Section execution started at : 1469592887435
+0 :: 1469592887403 :: Critical Section execution finished at : 1469592887443
+
+1 :: 1469592887444 :: Critical Section execution started at : 1469592887461
+1 :: 1469592887444 :: Critical Section execution finished at : 1469592887469
+
+
+0 :: 1469592897412 :: Critical Section execution started at : 1469592897443
+0 :: 1469592897412 :: Critical Section execution finished at : 1469592897453
+
+1 :: 1469592897449 :: Critical Section execution started at : 1469592897473
+1 :: 1469592897449 :: Critical Section execution finished at : 1469592897482
+
+
+
+Sorted by executionStarted List<Node> nodeList
+
+HashMap<String, Node> asda nwe
+
+node {
+int nodeid;
+int timeStampRequestedl
+int executionStarted;
+int executionFinsihed;
+}
+
+
+Stack<Node> stack;
+
+
+
+//for elements 2nd to last in nodeList
+
+list[0].executionStarted < stack.peek.end{
+ //overlapping
+ println(
+
+}else{
+//Non Overlapping
+ stack.push(list[i]);
+
+
+}
+
+
+
+
+
+	//Random Input
+myList = [{1,3}, {7,10}, {14 , 16}]
+
+interval = {2,8}
+
+
+myListTemp = sorted (myList + interval)
+
+Answer = [{1,10}, {14,16}];
+
+Class Interval{
+ int startTime;
+ int endTime;
+}
+
+
+
+
+
+
+{1,3}
+			  //Overalpping
+public List<Interval> foo(List<Interval> myList){
+		
+        Stack stack = new Stack<Interval>();
+	stack.push(myList.get(0));
+
+	for elements 1 to N
+	{
+		if(stack.peek.endTime < myList.get(i).startTime){
+			//Non-overlapping
+			stack.push(myList.get(i));
+		}
+		else if(stack.peek.end < myList.get(i).endTime){
+		{ 
+ 		     Intervval in = stack.peek; {1,3}
+		     stack.pop(); //Stack empty
+		     in.end = myList.get(i).endTime; {1,8}
+		     stack.push(in);	
+		}
+	}
+  retrun mergedList;
+} 
+
+

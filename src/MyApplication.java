@@ -21,7 +21,10 @@ public class MyApplication {
 	HashMap<Integer, Node> host_to_port = new HashMap<Integer, Node>();
 	// static HashMap<String,Integer> host_to_node = new
 	// HashMap<String,Integer>();
-
+	
+	private int interRequestDelay;
+	public static int criticalSectionTime;
+	private int noOfRequests;
 	private Node node;
 
 	public MyApplication(final int node_id) throws IOException {
@@ -36,9 +39,9 @@ public class MyApplication {
 		String[] messages_props = first_line.split("\\s+");
 		TOTAL_NODES = Integer.parseInt(messages_props[0]);
 
-		// System.out.println(ob1.d=Integer.parseInt(messages_props[1]));
-		// System.out.println(ob1.c=Integer.parseInt(messages_props[2]));
-		// System.out.println(ob1.critical_request_num=Integer.parseInt(messages_props[3]));
+		System.out.println(interRequestDelay=Integer.parseInt(messages_props[1]));
+		System.out.println(criticalSectionTime=Integer.parseInt(messages_props[2]));
+		System.out.println(noOfRequests=Integer.parseInt(messages_props[3]));
 
 		String currentline;
 		int count = Integer.parseInt(messages_props[0]);
@@ -89,18 +92,25 @@ public class MyApplication {
 			ex.printStackTrace();
 		}
 		
+		
+		
 		Client client = myApp.node.getClient();
-//		client.initSocketConnection();
-		client.sendRequest();
-		
-		Thread.sleep(10000);
-		myApp.node.emptyForNewRequest();
-		client.sendRequest();
-		
-		
-		
-		
 		Server server = myApp.node.getServer();
+		
+		//		client.initSocketConnection();
+		
+		
+		for(int i=0;i<myApp.noOfRequests;i++)
+		{
+		client.sendRequest();
+		
+		Thread.sleep(myApp.interRequestDelay);
+		myApp.node.emptyForNewRequest();
+		}
+		
+		
+		
+		
 		
 	}
 }

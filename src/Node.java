@@ -178,8 +178,17 @@ public class Node {
 	}
 
 	public void executeCriticalSection() {
+		//
+		try {
+			Thread.sleep(MyApplication.criticalSectionTime);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//
 		Logger.println("Critical Section for Node : " + this._id + " executed");
 		// For Printing Only : In-Order
+		
 		PriorityBlockingQueue<Message> queue = new PriorityBlockingQueue<>(10, comparator);
 		Logger.println("Message in queue are in order");
 		while (!messageQueue.isEmpty()) {
